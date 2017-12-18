@@ -28,6 +28,8 @@ module Alipay
     # [:charset] default is 'UTF-8', only support 'UTF-8'.
     #
     # [:sign_type] default is 'RSA2', support 'RSA2', 'RSA', 'RSA2' is recommended.
+    attr_accessor :url , :app_id, :app_private_key, :alipay_public_key, :format, :charset, :sign_type
+
     def initialize(options)
       options = ::Alipay::Utils.stringify_keys(options)
       @url = options['url']
@@ -37,6 +39,14 @@ module Alipay
       @format = options['format'] || 'json'
       @charset = options['charset'] || 'UTF-8'
       @sign_type = options['sign_type'] || 'RSA2'
+    end
+
+    def self.client
+      @client ||= self.new(options = {})
+    end
+
+    def self.configure
+      yield client
     end
 
     # Generate a query string that use for APP SDK excute.
