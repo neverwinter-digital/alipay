@@ -37,12 +37,17 @@ APP_PRIVATE_KEY: "-----BEGIN RSA PRIVATE KEY-----\nxkbt...4Wt7tl\n-----END RSA P
 ALIPAY_PUBLIC_KEY: "-----BEGIN PUBLIC KEY-----\nTq43T5...OVUAQb3R\n-----END PUBLIC KEY-----\n"
 
 # set up a client to talk to the Alipay API
-@client = Alipay::Client.new(
-  url: API_URL,
-  app_id: APP_ID,
-  app_private_key: APP_PRIVATE_KEY,
-  alipay_public_key: ALIPAY_PUBLIC_KEY
-)
+
+Alipay::Client.configure do |config|
+  config.url = 'https://openapi.alipaydev.com/gateway.do'
+  config.app_id = '2016000000000000'
+  config.app_private_key = TEST_RSA_PRIVATE_KEY
+  config.alipay_public_key = TEST_RSA_PUBLIC_KEY
+  config.format = 'json'
+  config.charset = 'UTF-8'
+  config.sign_type = 'RSA2'
+end
+
 ```
 
 ### Ruby on Rails
@@ -72,12 +77,17 @@ ALIPAY_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nTq43T5...OVUAQb3R\n-----END PUBLI
 
 In your Ruby on Rails application, you can create an Alipay client instance like this:
 ```ruby
-@client = Alipay::Client.new(
-  url: ENV['ALIPAY_API'],
-  app_id: ENV['APP_ID'],
-  app_private_key: ENV['APP_PRIVATE_KEY'],
-  alipay_public_key: ENV['ALIPAY_PUBLIC_KEY']
-)
+
+Alipay::Client.configure do |config|
+  config.url = 'https://openapi.alipaydev.com/gateway.do'
+  config.app_id = '2016000000000000'
+  config.app_private_key = TEST_RSA_PRIVATE_KEY
+  config.alipay_public_key = TEST_RSA_PUBLIC_KEY
+  config.format = 'json'
+  config.charset = 'UTF-8'
+  config.sign_type = 'RSA2'
+end
+
 ```
 
 ## Create Payment
@@ -97,7 +107,7 @@ This client method will generate a payment URL for redirecting customers to.
 
 #### Example
 ```ruby
-@client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.page.pay',
   return_url: 'https://mystore.com/orders/20160401000000/return',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
@@ -139,7 +149,7 @@ This method will generate a payment URL for redirecting customers to.
 
 #### Example
 ```ruby
-@client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.wap.pay',
   return_url: 'https://mystore.com/orders/20160401000000/return',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
@@ -174,7 +184,7 @@ Alipay::Client.execute
 #### Example
 ```ruby
 # Create a QR code based payment
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.precreate',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
   biz_content: {
@@ -210,7 +220,7 @@ Alipay::Client.execute  (QR Code)
 Scenario: Customer pre-select a six-installment payment plan before going through the payment process at Alipay.
 
 ```ruby
-@client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.page.pay',
   return_url: 'https://mystore.com/orders/20160401000000/return',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
@@ -229,7 +239,7 @@ Scenario: Customer pre-select a six-installment payment plan before going throug
 ```
 Scenario: Customer select an installment plan or their choice at Alipay's payment page.
 ```ruby
-@client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.page.pay',
   return_url: 'https://mystore.com/orders/20160401000000/return',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
@@ -271,7 +281,7 @@ params = {
   sign_type: 'RSA2',
   sign: '...'
 }
-@client.verify?(params)
+Alipay::Client.client.verify?(params)
 # => true / false
 ```
 
@@ -281,7 +291,7 @@ defined during the payment creation process. Here is an example of how to verify
 from Alipay in your controller.
 
 ```ruby
-@client.verify?(request.query_parameters)
+Alipay::Client.client.verify?(request.query_parameters)
 # => true / false
 ```
 
@@ -291,7 +301,7 @@ the payment creation process. Your controller action should response 'success' i
 Alipay will keep on sending POST requests in increasing intervals.
 
 ```ruby
-if @client.verify?(request.request_parameters)
+if Alipay::Client.client.verify?(request.request_parameters)
   render plain: 'success'
 end
 ```
@@ -311,7 +321,7 @@ Alipay::Client.execute
 
 #### Example
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.query',
   biz_content: {
     trade_no: '2013112611001004680073956707',
@@ -347,7 +357,7 @@ Alipay::Client.execute
 
 #### Example
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.close',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
   biz_content: {
@@ -386,7 +396,7 @@ Alipay::Client.execute
 
 #### Example
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.cancel',
   biz_content: {
     out_trade_no: '20160401000000',
@@ -423,7 +433,7 @@ Alipay::Client.execute
 #### Example
 Secenario: Customer request refund on a ￥10.12 item on a ￥210.85 order(payment).
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.refund',
   biz_content: {
     out_trade_no: '6c50789a0610',
@@ -466,7 +476,7 @@ Alipay::Client.execute
 
 #### Example
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.fastpay.refund.query',
   biz_content: {
     out_trade_no: '6c50789a0610',
@@ -504,7 +514,7 @@ Alipay::Client.execute
 
 #### Example
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.fund.trans.toaccount.transfer',
   biz_content: {
     out_biz_no: '3142321423432',
@@ -546,7 +556,7 @@ Alipay::Client.execute
 
 #### Example
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.fund.trans.order.query',
   biz_content: {
     out_biz_no: '3142321423432',

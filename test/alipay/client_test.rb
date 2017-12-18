@@ -11,16 +11,6 @@ class Alipay::ClientTest < Minitest::Test
       config.charset = 'UTF-8'
       config.sign_type = 'RSA2'
     end
-
-    @client = Alipay::Client.new(
-      url: 'https://openapi.alipaydev.com/gateway.do',
-      app_id: '2016000000000000',
-      app_private_key: TEST_RSA_PRIVATE_KEY,
-      alipay_public_key: TEST_RSA_PUBLIC_KEY,
-      format: 'json',
-      charset: 'UTF-8',
-      sign_type: 'RSA2'
-    )
   end
 
   def test_client_initialize

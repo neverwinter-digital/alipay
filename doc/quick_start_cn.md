@@ -38,13 +38,18 @@ APP_ID: '2016000000000000'
 APP_PRIVATE_KEY: "-----BEGIN RSA PRIVATE KEY-----\nxkbt...4Wt7tl\n-----END RSA PRIVATE KEY-----\n"
 ALIPAY_PUBLIC_KEY: "-----BEGIN PUBLIC KEY-----\nTq43T5...OVUAQb3R\n-----END PUBLIC KEY-----\n"
 
-# 建立一个客户端以便快速调用API
-@client = Alipay::Client.new(
-  url: API_URL,
-  app_id: APP_ID,
-  app_private_key: APP_PRIVATE_KEY,
-  alipay_public_key: ALIPAY_PUBLIC_KEY
-)
+# 配置一个客户端以便快速调用API
+
+Alipay::Client.configure do |config|
+  config.url = 'https://openapi.alipaydev.com/gateway.do'
+  config.app_id = '2016000000000000'
+  config.app_private_key = TEST_RSA_PRIVATE_KEY
+  config.alipay_public_key = TEST_RSA_PUBLIC_KEY
+  config.format = 'json'
+  config.charset = 'UTF-8'
+  config.sign_type = 'RSA2'
+end
+
 ```
 
 ### Ruby on Rails
@@ -73,13 +78,18 @@ ALIPAY_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nTq43T5...OVUAQb3R\n-----END PUBLI
 ```
 
 设后置好，你可以在你的 Ruby on Rails 应用里使用环境变量创建一个支付宝 API 客户端
+
 ```ruby
-@client = Alipay::Client.new(
-  url: ENV['ALIPAY_API'],
-  app_id: ENV['APP_ID'],
-  app_private_key: ENV['APP_PRIVATE_KEY'],
-  alipay_public_key: ENV['ALIPAY_PUBLIC_KEY']
-)
+Alipay::Client.configure do |config|
+  config.url = 'https://openapi.alipaydev.com/gateway.do'
+  config.app_id = '2016000000000000'
+  config.app_private_key = TEST_RSA_PRIVATE_KEY
+  config.alipay_public_key = TEST_RSA_PUBLIC_KEY
+  config.format = 'json'
+  config.charset = 'UTF-8'
+  config.sign_type = 'RSA2'
+end
+
 ```
 
 ## 创建支付订单
@@ -99,7 +109,7 @@ Alipay::Client.page_execute_url
 
 #### 示例
 ```ruby
-@client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.page.pay',
   return_url: 'https://mystore.com/orders/20160401000000/return',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
@@ -137,7 +147,7 @@ Alipay::Client.page_execute_url
 
 #### 示例
 ```ruby
-@client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.wap.pay',
   return_url: 'https://mystore.com/orders/20160401000000/return',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
@@ -171,7 +181,7 @@ Alipay::Client.execute
 #### 示例
 ```ruby
 # 创建支付订单并取得订单信息
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.precreate',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
   biz_content: {
@@ -207,7 +217,7 @@ Alipay::Client.execute  (扫码支付)
 情景：顾客在商城网站上预先选择好分6期付款的方案。商城和支付宝创建支付订单时同时提供分期参数。
 
 ```ruby
-@client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.page.pay',
   return_url: 'https://mystore.com/orders/20160401000000/return',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
@@ -226,7 +236,7 @@ Alipay::Client.execute  (扫码支付)
 ```
 情景：商城网站不提供分期选项，但允许客户在支付宝的支付过程中自行决定分期付款。
 ```ruby
-@client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.page.pay',
   return_url: 'https://mystore.com/orders/20160401000000/return',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
@@ -262,7 +272,7 @@ params = {
   sign_type: 'RSA2',
   sign: '...'
 }
-@client.verify?(params)
+Alipay::Client.client.verify?(params)
 # => true / false
 ```
 
@@ -270,7 +280,7 @@ params = {
 支付宝会在顾客支付成功后，将客户以 GET 请求的方式重定向顾客到你指定的 `return_url` 地址。以下将简单地示范如何在你应用的 Controller 里验证回调数据。
 
 ```ruby
-@client.verify?(request.query_parameters)
+Alipay::Client.client.verify?(request.query_parameters)
 # => true / false
 ```
 
@@ -278,7 +288,7 @@ params = {
 支付宝在顾客支付成功后，会向你所指定的 `notify_url` 以 POST 请求方式发送异步通知。你的应用对应的Controller需以纯文本方式返回 `success` 这7个字符。否则支付宝会继续尝试发送异步通知。
 
 ```ruby
-if @client.verify?(request.request_parameters)
+if Alipay::Client.client.verify?(request.request_parameters)
   render plain: 'success'
 end
 ```
@@ -297,7 +307,7 @@ Alipay::Client.execute
 
 #### 示例
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.query',
   biz_content: {
     trade_no: '2013112611001004680073956707',
@@ -330,7 +340,7 @@ Alipay::Client.execute
 
 #### 示例
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.close',
   notify_url: 'https://mystore.com/orders/20160401000000/notify',
   biz_content: {
@@ -363,7 +373,7 @@ Alipay::Client.execute
 
 #### 示例
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.cancel',
   biz_content: {
     out_trade_no: '20160401000000',
@@ -398,7 +408,7 @@ Alipay::Client.execute
 #### 示例
 情景：顾客请求总额为 210.85 元的订单退款 10.12 元。
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.refund',
   biz_content: {
     out_trade_no: '6c50789a0610',
@@ -436,7 +446,7 @@ Alipay::Client.execute
 
 #### 示例
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.trade.fastpay.refund.query',
   biz_content: {
     out_trade_no: '6c50789a0610',
@@ -471,7 +481,7 @@ Alipay::Client.execute
 
 #### 示例
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.fund.trans.toaccount.transfer',
   biz_content: {
     out_biz_no: '3142321423432',
@@ -509,7 +519,7 @@ Alipay::Client.execute
 
 #### 示例
 ```ruby
-response = @client.execute(
+response = Alipay::Client.client.execute(
   method: 'alipay.fund.trans.order.query',
   biz_content: {
     out_biz_no: '3142321423432',

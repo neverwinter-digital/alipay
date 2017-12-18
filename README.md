@@ -44,17 +44,22 @@ APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\nxkbt...4Wt7tl\n-----END RSA PR
 ALIPAY_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nTq43T5...OVUAQb3R\n-----END PUBLIC KEY-----\n"
 
 # initialize a client to communicate with the Alipay API
-@alipay_client = Alipay::Client.new(
-  url: API_URL,
-  app_id: APP_ID
-  app_private_key: APP_PRIVATE_KEY,
-  alipay_public_key: ALIPAY_PUBLIC_KEY
-)
+# Alipay::Client.client return an class instance variable
+Alipay::Client.configure do |config|
+  config.url = 'https://openapi.alipaydev.com/gateway.do'
+  config.app_id = '2016000000000000'
+  config.app_private_key = TEST_RSA_PRIVATE_KEY
+  config.alipay_public_key = TEST_RSA_PUBLIC_KEY
+  config.format = 'json'
+  config.charset = 'UTF-8'
+  config.sign_type = 'RSA2'
+end
+
 ```
 
 ### Create a payment
 ```ruby
-@alipay_client.page_execute_url(
+Alipay::Client.client.page_execute_url(
   method: 'alipay.trade.page.pay',
   biz_content: {
     out_trade_no: '20160401000000',
